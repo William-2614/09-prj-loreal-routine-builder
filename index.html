@@ -91,7 +91,9 @@
       </footer>
     </div>
 
-    <!-- secrets.js can be removed when using Cloudflare Workers for API requests -->
+    <!-- config.js is for deployed Worker URL configuration -->
+    <script src="config.js"></script>
+    <!-- secrets.js is for local-only key testing; this file is gitignored -->
     <script src="secrets.js"></script>
     <script src="script.js"></script>
   </body>

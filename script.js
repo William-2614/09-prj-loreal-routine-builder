@@ -154,10 +154,18 @@ function isBeautyRelatedQuestion(question) {
 
 /* Shared OpenAI call helper */
 async function getOpenAIReply(messages) {
+  const workerApiUrl = (window.WORKER_API_URL || "").trim();
+
+  if (workerApiUrl) {
+    return getOpenAIReplyFromWorker(workerApiUrl, messages);
+  }
+
   const apiKey = (window.OPENAI_API_KEY || "").trim();
 
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is missing. Add it in secrets.js.");
+    throw new Error(
+      "No API config found. For local testing, add OPENAI_API_KEY in secrets.js. For deployed sites, set WORKER_API_URL in config.js.",
+    );
   }
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
@@ -181,6 +189,32 @@ async function getOpenAIReply(messages) {
 
   if (!reply) {
     throw new Error("OpenAI returned an empty response.");
+  }
+
+  return reply;
+}
+
+/* Secure mode: call your Cloudflare Worker instead of exposing a browser API key */
+async function getOpenAIReplyFromWorker(workerApiUrl, messages) {
+  const response = await fetch(workerApiUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ messages }),
+  });
+
+  if (!response.ok) {
+    throw new Error(
+      `Worker request failed with status ${response.status}. Check Worker URL and deployment.`,
+    );
+  }
+
+  const data = await response.json();
+  const reply = data.reply;
+
+  if (!reply) {
+    throw new Error("Worker returned an empty response.");
   }
 
   return reply;
