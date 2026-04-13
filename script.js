@@ -196,7 +196,11 @@ async function getOpenAIReply(messages) {
 
 /* Secure mode: call your Cloudflare Worker instead of exposing a browser API key */
 async function getOpenAIReplyFromWorker(workerApiUrl, messages) {
-  const response = await fetch(workerApiUrl, {
+  const normalizedWorkerApiUrl = workerApiUrl.startsWith("http")
+    ? workerApiUrl
+    : `https://${workerApiUrl}`;
+
+  const response = await fetch(normalizedWorkerApiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
